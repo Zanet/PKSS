@@ -1,0 +1,11 @@
+p
+{
+text-align: center;
+color: white;
+font-family: arial
+}
+
+body { background-image: url(black-bg.jpg) }
+
+a:link { color: green}
+a:visited { color: orange}
