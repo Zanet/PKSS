@@ -5,15 +5,29 @@
 
 %must be run as administrator ! 
 %if not try runas /user:USERNAME(Piotr) notepad
+%ip address wil be given in the future
 
-t = tcpip('192.168.56.101',5001); 
+clear all; 
+
+PORT_NUMBER = 5001;
+IP = '192.168.56.101';
+
+t = tcpip(IP, PORT_NUMBER); 
 fopen(t);
-fwrite(t,'!getTime'); 
-A = fread(t, 11); 
-text = char(A.')
-fclose(t);
-delete(t)
+fwrite(t,'!getTime');
+[A, COUNT] = fread(t, 12); 
+if(COUNT == 12)
+    text = char(A.')
+    fclose(t);
+    delete(t)
 
-command = strcat(['echo ' text ' | time'])      
-        
-system(command);        
+    command = 'echo HH:MM:00 PM | time';
+    hour = text(1:2);
+    minute = text(4:5);
+    command = strrep(command, 'HH', hour);
+    command = strrep(command, 'MM', minute);
+
+    system(command);
+else
+    echo 'Receive error! Size mismatch.'
+end
