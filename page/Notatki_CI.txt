@@ -1,0 +1,6 @@
+Ci¹g³a integracja - Jenkins
+
+Przed unit testami:
+code review
+per coding
+static code analysis (Coderby?)
