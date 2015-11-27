@@ -9,25 +9,31 @@
 
 clear all; 
 
-PORT_NUMBER = 5001;
-IP = '192.168.56.101';
+PORT_NUMBER = 32001;
+IP = '192.168.2.4';
 
-t = tcpip(IP, PORT_NUMBER); 
+t = tcpip(IP, PORT_NUMBER, 'NetworkRole', 'client'); 
 fopen(t);
-fwrite(t,'!getTime');
-[A, COUNT] = fread(t, 12); 
-if(COUNT == 12)
+%fwrite(t,'!getTime');
+
+%while
+ fwrite(t, '!E!S123');
+
+
+[A, COUNT] = fread(t, 12)
+
+if(COUNT > 0)
     text = char(A.')
     fclose(t);
     delete(t)
 
-    command = 'echo HH:MM:00 PM | time';
-    hour = text(1:2);
-    minute = text(4:5);
-    command = strrep(command, 'HH', hour);
-    command = strrep(command, 'MM', minute);
-
-    system(command);
-else
-    echo 'Receive error! Size mismatch.'
+%     command = 'echo HH:MM:00 PM | time';
+%     hour = text(1:2);
+%     minute = text(4:5);
+%     command = strrep(command, 'HH', hour);
+%     command = strrep(command, 'MM', minute);
+% 
+%     system(command);
+%else
+%    echo 'Receive error! Size mismatch.'
 end
