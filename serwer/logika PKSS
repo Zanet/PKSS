@@ -1,0 +1,11 @@
+funkcja do ustawiania czasu systemowego z poziomu pliku c jest na gicie.
+
+Dzialanie serwera:
+
+1) resetujemy tablice booli z informacją "connected" czy nie
+2) czekamy, az kazdy z hostów przysle nam cos jak "Keep alive", ktore beda wysylac co 200ms na przyklad do momentu otrzymania np "Keep Alive Ack"
+Wtedy hosty zaczynaja wysylac co 200ms np komende "readyToSimulate"
+3) po otrzymaniu takiego KA ustawiamy w tablicy connected stan urzadzenia na true
+4) gdy wszystkie beda polaczone to serwer moze reagowac na komende "readyToSimulate". Jesli otrzyma jąod hosta to wysyla mu potrzebne dane
+5) Host w odpowiedzi odesle nam rezulat symulacji, ktory zapiszemy do odpowiednich struktur
+6) gdy wszystkie hosty zrobią "readyToSimulate", otrzymaja dane, obliczą i odeslą to mozemy zwiekszyc czas symulacji i przejsc do punktu 1)
