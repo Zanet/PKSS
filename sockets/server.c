@@ -7,6 +7,7 @@
 //#include <cstring> // strstr
 #include <string.h>
 #include "sha1.h"
+#include "b64encode.h" // trzeba zainstalowac libb64.sourceforge.net/
 
 // compile:
 // gcc server.c -o server
@@ -92,23 +93,24 @@ int main( int argc, char *argv[] ) {
 		   strncpy(SocketKey, index+19, 24);
 		   // Prepare Handshake
 		   unsigned char* SocketHash; //[SHA_DIGEST_LENGTH];
-           char MagicString = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+           char* Base64Hash;
+           char MagicString[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
 		   // zrobic SHA klucza, instrukcja w kodzie index.html (link)
 		   sha1nfo s;
-
            sha1_init(&s);
- 
 		   sha1_write(&s, SocketKey, 24);
            sha1_write(&s, MagicString, 36); // albo 32 bez pauz
 		   SocketHash = sha1_result(&s); 
 
-		   // SHA tests
-		   printf("Test: \n");
-
            //printKey(SocketKey, 24);    
-		   printf("\nKey is %s\nKoniec kurwa tego\n\n", SocketKey);
-		   printf("SHA1 is %s\n", SocketHash);
-		   printHash(SocketHash);
+		   printf("\nKlucz Websocket: \n", SocketKey);
+		   printf("SHA1 Klucz+Magic: %s\n", SocketHash);
+		   printf("SHA1 jako hex string: "); printHash(SocketHash);
+
+           // Base64 encode
+           Base64Hash = encode(SocketHash);
+           printf("Base64 encoding: %s\n", Base64Hash);
 
 		   //strcpy(response_buf, "HTTP Response");
 	   	   //n = write( newsockfd, response_buf, 255);
