@@ -6,8 +6,19 @@
 
 //#include <cstring> // strstr
 #include <string.h>
-#include <openssl/sha.h>
+#include "sha1.h"
 
+// compile with sha1.c
+#define SHA_DIGEST_LENGTH 20
+/*
+void printHash(uint8_t* hash) {
+	int i;
+	for (i=0; i<20; i++) {
+		printf("%02x", hash[i]);
+	}
+	printf("\n");
+}
+*/
 
 int main( int argc, char *argv[] ) {
    int sockfd, newsockfd, portno, clilen;
@@ -26,7 +37,7 @@ int main( int argc, char *argv[] ) {
    
    /* Initialize socket structure */
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 5004;
+   portno = 5008;
    
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -71,29 +82,31 @@ int main( int argc, char *argv[] ) {
 		   // Seek for Key
 		   const char keyString[] = "Sec-WebSocket-Key";
 		   char* index;
-		   char SocketKey[50];
-		   printf("Test\n");
+		   char SocketKey[24];
 		   index = strstr(buffer, keyString);
-		   strncpy(SocketKey, index+19, 35);
+		   strncpy(SocketKey, index+19, 24);
 		   // Prepare Handshake
-		   unsigned char SocketHash[SHA_DIGEST_LENGTH];
-		   //SHA1(SocketKey, 35, SocketHash);
-
-			// zrobic SHA klucza, instrukcja w kodzie index.html (link)
-		   
+		   unsigned char* SocketHash; //[SHA_DIGEST_LENGTH];
+           char MagicString = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+		   // zrobic SHA klucza, instrukcja w kodzie index.html (link)
 		   sha1nfo s;
 
-			// SHA tests
-			printf("Test: \n");
-	
-			sha1_init(&s);
-			sha1_write(&s, SocketKey, 35);
-			printHash(sha1_result(&s));
-		   
-		   printf("Key is %s", SocketKey);
-		   printf("SHA1 is %s", SocketHash);
-		   strcpy(response_buf, "HTTP Response");
-	   	   n = write( newsockfd, response_buf, 255);
+           sha1_init(&s);
+ 
+		   sha1_write(&s, SocketKey, 24);
+           sha1_write(&s, MagicString, 36); // albo 32 bez pauz
+		   SocketHash = sha1_result(&s); 
+
+		   // SHA tests
+		   printf("Test: \n");
+
+           //printKey(SocketKey, 24);    
+		   printf("\nKey is %s\nKoniec kurwa tego\n\n", SocketKey);
+		   printf("SHA1 is %s\n", SocketHash);
+		   printHash(SocketHash);
+
+		   //strcpy(response_buf, "HTTP Response");
+	   	   //n = write( newsockfd, response_buf, 255);
 	   }
 	   
    }
