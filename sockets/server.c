@@ -8,7 +8,12 @@
 #include <string.h>
 #include "sha1.h"
 
-// compile with sha1.c
+// compile:
+// gcc server.c -o server
+
+// Tornado:
+// https://developer.mbed.org/cookbook/Websockets-Server
+
 #define SHA_DIGEST_LENGTH 20
 /*
 void printHash(uint8_t* hash) {
