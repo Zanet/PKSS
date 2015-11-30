@@ -8,7 +8,7 @@
 <body>
 <script>
 function sock() {
-    var connection = new WebSocket("ws://192.168.2.3:32001");
+    var connection = new WebSocket("ws://localhost:5008"); // ws://192.168.2.3:32001");
 	
 	connection.onopen = function () {
   	connection.send("message"); // Send the message 'Ping' to the server

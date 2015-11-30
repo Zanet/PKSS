@@ -210,6 +210,23 @@ uint8_t* sha1_resultHmac(sha1nfo *s) {
 	return sha1_result(s);
 }
 
+void printKey(uint8_t* key, int len) {
+	int i;
+	for (i=0; i<len; i++) {
+		printf("%02x", key[i]);
+	}
+	printf("\n");
+}
+
+void printHash(uint8_t* hash) {
+	int i;
+	for (i=0; i<20; i++) {
+		printf("%02x", hash[i]);
+	}
+	printf("\n");
+}
+
+
 /* self-test */
 
 #if SHA1TEST
@@ -240,16 +257,7 @@ uint8_t hmacKey4[]={
 	0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9a,0x9b,0x9c,0x9d,0x9e,0x9f,
 	0xa0
 };
-
-void printHash(uint8_t* hash) {
-	int i;
-	for (i=0; i<20; i++) {
-		printf("%02x", hash[i]);
-	}
-	printf("\n");
-}
-
-
+/*
 int main (int argc, char **argv) {
 	uint32_t a;
 	sha1nfo s;
@@ -322,4 +330,5 @@ int main (int argc, char **argv) {
 
 	return 0;
 }
+*/
 #endif /* self-test */
