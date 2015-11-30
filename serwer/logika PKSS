@@ -9,3 +9,17 @@ Wtedy hosty zaczynaja wysylac co 200ms np komende "readyToSimulate"
 4) gdy wszystkie beda polaczone to serwer moze reagowac na komende "readyToSimulate". Jesli otrzyma jąod hosta to wysyla mu potrzebne dane
 5) Host w odpowiedzi odesle nam rezulat symulacji, ktory zapiszemy do odpowiednich struktur
 6) gdy wszystkie hosty zrobią "readyToSimulate", otrzymaja dane, obliczą i odeslą to mozemy zwiekszyc czas symulacji i przejsc do punktu 1)
+
+
+
+
+Komendy wysylane przez klientow maja format:
+!ID!Command
+
+
+
+ID:
+E - Elektrocieplownia
+R - Regulator
+B - Budynek
+W - Wymiennik
