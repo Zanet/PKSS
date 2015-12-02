@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include <arpa/inet.h>
 #include <cstdio>
 #include <cstring>
@@ -30,10 +30,63 @@ const int BUFFER_SIZE = 4096;
 const int TIME_STR_SIZE = 12;
 const int NUMBER_OF_DEVICES = 4;
 int iteration = 0;
+int cmd = 0;
 bool deviceConnected[NUMBER_OF_DEVICES];
 bool deviceSentData[NUMBER_OF_DEVICES];
 char addr_buf[INET_ADDRSTRLEN]; 
 
+time_t timer;
+struct tm* info;
+char buffer[9];
+
+/*void logToFile(int iteration, int command, const char* dataToBeLogged)
+{
+    static FILE *fp;
+    fp = fopen("logs/a.log", "a");
+    fprintf(fp, "%s", dataToBeLogged);
+    fclose(fp);
+}*/
+
+
+void fastForwardTimeInMinutes(int minutes)
+{
+    //timer = time(NULL); //current system time
+
+    printf("Current time is: %s\n", ctime(&timer));
+            
+    timer += 60*minutes;
+    //stime(&timer);
+    //time(&timer);
+    printf("Current time after modification is: %s\n", ctime(&timer));
+
+    info = localtime(&timer);
+    strftime(buffer, 9, "%d %H:%M", info);
+    printf("Time in buffer: %s\n", buffer);
+}
+
+void printAllData()
+{
+    printf("--------DATA IN SYSTEM--------\n");
+    printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
+    printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
+    printf("| Budynek: %s\n", budynek_zeszle.T_pco);
+    printf("| Regulator: %s\n", regulator_zeszle.F_zm);
+    printf("------------------------------\n");
+}
+
+
+void updateDeviceValues()
+{
+    strncpy(elektrocieplownia_zeszle.T_o, elektrocieplownia_obecne.T_o, MAX_RECORD_SIZE);
+    strncpy(elektrocieplownia_zeszle.T_zm, elektrocieplownia_obecne.T_zm, MAX_RECORD_SIZE);
+
+    strncpy(wymiennik_zeszle.T_pm, wymiennik_obecne.T_pm, MAX_RECORD_SIZE);
+    strncpy(wymiennik_zeszle.T_zco, wymiennik_obecne.T_zco, MAX_RECORD_SIZE);
+
+    strncpy(budynek_zeszle.T_pco, budynek_obecne.T_pco, MAX_RECORD_SIZE);
+
+    strncpy(regulator_zeszle.F_zm, regulator_obecne.F_zm, MAX_RECORD_SIZE);
+}
 
 void resetConnectionsTable()
 {
@@ -83,6 +136,16 @@ int main(int argc, char* argv[])
         printf("Usage: %s port_no\n", argv[0]);
         exit(2);
     }
+
+//this snippet is to avoid waiting for timeout after closing socket
+    int yes=1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) 
+    {
+        perror("setsockopt");
+        exit(1);
+    }
+//end of snippet
+
     /* Server parameters */
     svr_name.sin_family = PF_INET;
     svr_name.sin_addr.s_addr = INADDR_ANY; //tu ip serwera?
@@ -101,9 +164,15 @@ int main(int argc, char* argv[])
 
 
     resetConnectionsTable();
+    
+    timer = time(NULL); //initial time the same as current system time
+    info = localtime(&timer);
+    strftime(buffer, 9, "%d %H:%M", info);
+    printf("Time in buffer: %s\n", buffer);
+
     while(true) 
-    {        
-        printf("%d. Waiting for connection.\n", iteration);
+    {     
+        printf("%d.%d Waiting for connection.\n", iteration, cmd);
         addrlen = sizeof(cli_name);
         sockfd2 = accept(sockfd, (struct sockaddr*) &cli_name, &addrlen);
         if (sockfd2 == -1) {
@@ -131,7 +200,7 @@ int main(int argc, char* argv[])
             break;             
         }
 
-        char separator = '!';
+        const char separator = '!';
         char *id = strtok(inBuf, &separator);
         char *command = strtok(NULL, &separator);
         if(id != NULL && command != NULL)
@@ -169,7 +238,6 @@ int main(int argc, char* argv[])
             printf("Nie rozpoznano hosta\n");
         }      
         
-
         if(strcmp(command, "KeepAlive") == 0)
         {
             const char* nop = "nop";
@@ -192,72 +260,136 @@ int main(int argc, char* argv[])
         }
         else if(strcmp(command, "GetTime") == 0)
         {
-            time_t timer;
-            struct tm* info;
-            
-            time(&timer); //current system time            
-            info = localtime(&timer);
-
-            char buffer[9] = "";
-            strftime(buffer, 9, "%d %I:%M", info);
-
             printf("Date set to: %s\n", buffer);
 
             send(sockfd2, buffer, sizeof("DD HH:MM"), 0);
         }
         else if(strcmp(command, "GetParams") == 0)
         {
-            const char* parameters = "3.14";
+            int dataSize = 0;
+            char strTo[3*MAX_RECORD_SIZE+2] = "";
             switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
             {
-                
                 case 0:
-                    send(sockfd2, parameters, sizeof("3.14"), 0); 
-                break;
-
+                    printf("Elektrocieplownia - zadnych danych\n");
+                    break;
                 case 1:
-                    send(sockfd2, parameters, sizeof("3.14"), 0);
-                break;
+                    printf("Wymiennik - Tpco, Tzm, Fzm\n");
+                    dataSize = 3*MAX_RECORD_SIZE+2;   
+   
+                    strcat(strTo, budynek_zeszle.T_pco);
+                    strcat(strTo, "!");
+                    strcat(strTo, elektrocieplownia_zeszle.T_zm);
+                    strcat(strTo, "!");
+                    strcat(strTo, regulator_zeszle.F_zm);  
 
+                    printf("\n\n\nparams send to wymmienik: %s\n", strTo);
+                    send(sockfd2, strTo, dataSize, 0);
+                    break;
+                case 2:
+                    printf("Budynek - Tzco, To\n");
+                    dataSize = 2*MAX_RECORD_SIZE+1;   
+
+                    strcat(strTo, wymiennik_zeszle.T_zco);
+                    strcat(strTo, "!");
+                    strcat(strTo, elektrocieplownia_zeszle.T_o);
+ 
+                    send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                    break;
+                case 3:
+                    printf("Regulator - Tzco, To\n");
+                    dataSize = 2*MAX_RECORD_SIZE+1;   
+
+                    strcat(strTo, wymiennik_zeszle.T_zco);
+                    strcat(strTo, "!");
+                    strcat(strTo, elektrocieplownia_zeszle.T_o);
+ 
+                    send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                    break;
                 default:
-                    printf("Unknown client has sent 'Data'\n");
+                    printf("Unknown client has sent 'GetParams'\n");
             }
         }
 
         else if(strcmp(command, "SendData") == 0)
         {
-            memset(inBuf, 0, BUFFER_SIZE);
+            //memset(inBuf, 0, BUFFER_SIZE);
 
             if(clientNumber < NUMBER_OF_DEVICES)
             {
                 deviceSentData[clientNumber] = true;
             }  
 
+            char *data1 = NULL;
+            char *data2 = NULL;
+
             switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
             {
-                case 0:
-                    status = recv(sockfd2, inBuf, sizeof(inBuf), 0);                     
-                    printf("Received data: %s\n", inBuf);                
-                break;
+                case 0:                    
+                    printf("Received data: %s\n", inBuf);
+                    data1 = strtok(NULL, &separator);
+                    data2 = strtok(NULL, &separator);
+                    if(data1 && data2)
+                    {
+                        printf("Separately %s and %s\n", data1, data2);
+                        strncpy(elektrocieplownia_obecne.T_o, data1, MAX_RECORD_SIZE);
+                        strncpy(elektrocieplownia_obecne.T_zm, data2, MAX_RECORD_SIZE);               
+                    }                
+                    break;
                 
                 case 1:
-
-                break;
+                    printf("Received data: %s\n", inBuf);
+                    data1 = strtok(NULL, &separator);
+                    data2 = strtok(NULL, &separator);
+                    if(data1 && data2)
+                    {
+                        printf("Separately %s and %s\n", data1, data2);
+                        strncpy(wymiennik_obecne.T_pm, data1, MAX_RECORD_SIZE);
+                        strncpy(wymiennik_obecne.T_zco, data2, MAX_RECORD_SIZE);               
+                    } 
+                    break;
+               case 2:
+                    printf("Received data: %s\n", inBuf);
+                    data1 = strtok(NULL, &separator);
+                    if(data1)
+                    {
+                        printf("Separately %s\n", data1);
+                        strncpy(budynek_obecne.T_pco, data1, MAX_RECORD_SIZE);              
+                    } 
+                    break;
+               case 3:
+                    printf("Received data: %s\n", inBuf);
+                    data1 = strtok(NULL, &separator);
+                    if(data1)
+                    {
+                        printf("Separately %s\n", data1);
+                        strncpy(regulator_obecne.F_zm, data1, MAX_RECORD_SIZE);               
+                    } 
+                    break;
 
                 default:
                     printf("Unknown client has sent 'Data'\n");
             }
         }
 
+        cmd++;
         memset(inBuf, 0, BUFFER_SIZE);
-        if(allClientsSentData())
+        if(allClientsConnected() && allClientsSentData())
         {
             printf("Iteration is complete, go to next\n");
-           // iteration++;
-        } 
-        iteration++;       
+            printAllData();
+            updateDeviceValues();
+            printAllData();
+            resetConnectionsTable();
+
+            fastForwardTimeInMinutes(10);
+
+            iteration++;
+            cmd = 0;
+        }     
     }
 
     close(sockfd);
     return SUCCESS;
 }
+

@@ -1,22 +1,26 @@
 #ifndef __PKSS_STRUCTS__
 #define __PKSS_STRUCTS__
 
+#include <cstring>
+const int MAX_RECORD_SIZE = 8;
+
+
 typedef struct {
-    float T_o;
-    float T_zm;
+    char T_o[MAX_RECORD_SIZE];
+    char T_zm[MAX_RECORD_SIZE];
 } Elektrocieplownia;
 
 typedef struct {
-    float T_pm;
-    float T_zco;
+    char T_pm[MAX_RECORD_SIZE];
+    char T_zco[MAX_RECORD_SIZE];
 } Wymiennik;
 
 typedef struct {
-    float T_pco;
+    char T_pco[MAX_RECORD_SIZE];
 } Budynek;
 
 typedef struct {
-    float F_zm;
+    char F_zm[MAX_RECORD_SIZE];
 } Regulator;
 
 #endif
