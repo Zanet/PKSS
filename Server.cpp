@@ -49,19 +49,16 @@ char buffer[9];
 
 
 void fastForwardTimeInMinutes(int minutes)
-{
-    //timer = time(NULL); //current system time
-
-    printf("Current time is: %s\n", ctime(&timer));
+{    //printf("Current time is: %s\n", ctime(&timer));
             
     timer += 60*minutes;
-    //stime(&timer);
-    //time(&timer);
-    printf("Current time after modification is: %s\n", ctime(&timer));
+    //printf("Current time after modification is: %s\n", ctime(&timer));
 
     info = localtime(&timer);
+
+    //info->tm_min += minutes;
+
     strftime(buffer, 9, "%d %H:%M", info);
-    printf("Time in buffer: %s\n", buffer);
 }
 
 void printAllData()
@@ -93,6 +90,13 @@ void resetConnectionsTable()
     for(int i = 0; i < NUMBER_OF_DEVICES; i++)
     {
         deviceConnected[i] = false;
+    }
+}
+
+void resetSentDataTable()
+{
+    for(int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
         deviceSentData[i] = false;
     }
 }
@@ -132,8 +136,8 @@ int main(int argc, char* argv[])
         printf("socket() error\n");
         exit(1);
     }
-    if (argc < 2) {
-        printf("Usage: %s port_no\n", argv[0]);
+    if (argc < 4) {
+        printf("Usage: %s port_no day_of_the_month hour_to_start_from\n", argv[0]);
         exit(2);
     }
 
@@ -164,9 +168,17 @@ int main(int argc, char* argv[])
 
 
     resetConnectionsTable();
+    resetSentDataTable();
+
+    //use the following if you want to start from present time
+    //timer = time(NULL); //initial time the same as current system time
+    //info = localtime(&timer);
     
-    timer = time(NULL); //initial time the same as current system time
-    info = localtime(&timer);
+    //convert data to day and hour
+    timer = 24*60*60*(atoi(argv[2])-1) + 60*60*(atoi(argv[3])-1);
+    info = localtime(&timer); 
+    
+    
     strftime(buffer, 9, "%d %H:%M", info);
     printf("Time in buffer: %s\n", buffer);
 
@@ -254,7 +266,7 @@ int main(int argc, char* argv[])
             }
             else
             {   
-                printf("We are still missing someone :(\n");
+                //printf("We are still missing someone :(\n");
                 send(sockfd2, nop, sizeof("nop"), 0);
             }               
         }
@@ -283,7 +295,6 @@ int main(int argc, char* argv[])
                     strcat(strTo, "!");
                     strcat(strTo, regulator_zeszle.F_zm);  
 
-                    printf("\n\n\nparams send to wymmienik: %s\n", strTo);
                     send(sockfd2, strTo, dataSize, 0);
                     break;
                 case 2:
@@ -325,25 +336,23 @@ int main(int argc, char* argv[])
 
             switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
             {
-                case 0:                    
-                    printf("Received data: %s\n", inBuf);
+                case 0:
                     data1 = strtok(NULL, &separator);
                     data2 = strtok(NULL, &separator);
                     if(data1 && data2)
                     {
-                        printf("Separately %s and %s\n", data1, data2);
+                        printf("We got %s and %s\n", data1, data2);
                         strncpy(elektrocieplownia_obecne.T_o, data1, MAX_RECORD_SIZE);
                         strncpy(elektrocieplownia_obecne.T_zm, data2, MAX_RECORD_SIZE);               
                     }                
                     break;
                 
                 case 1:
-                    printf("Received data: %s\n", inBuf);
                     data1 = strtok(NULL, &separator);
                     data2 = strtok(NULL, &separator);
                     if(data1 && data2)
                     {
-                        printf("Separately %s and %s\n", data1, data2);
+                        printf("We got %s and %s\n", data1, data2);
                         strncpy(wymiennik_obecne.T_pm, data1, MAX_RECORD_SIZE);
                         strncpy(wymiennik_obecne.T_zco, data2, MAX_RECORD_SIZE);               
                     } 
@@ -353,16 +362,15 @@ int main(int argc, char* argv[])
                     data1 = strtok(NULL, &separator);
                     if(data1)
                     {
-                        printf("Separately %s\n", data1);
+                        printf("We got  %s\n", data1);
                         strncpy(budynek_obecne.T_pco, data1, MAX_RECORD_SIZE);              
                     } 
                     break;
                case 3:
-                    printf("Received data: %s\n", inBuf);
                     data1 = strtok(NULL, &separator);
                     if(data1)
                     {
-                        printf("Separately %s\n", data1);
+                        printf("We got %s\n", data1);
                         strncpy(regulator_obecne.F_zm, data1, MAX_RECORD_SIZE);               
                     } 
                     break;
@@ -374,21 +382,26 @@ int main(int argc, char* argv[])
 
         cmd++;
         memset(inBuf, 0, BUFFER_SIZE);
-        if(allClientsConnected() && allClientsSentData())
+
+        if(allClientsSentData())
         {
-            printf("Iteration is complete, go to next\n");
-            printAllData();
+            if(allClientsConnected())
+            {               
+                printf("Iteration is complete, go to next\n");
+                resetConnectionsTable();
+                fastForwardTimeInMinutes(10);
+                iteration++;
+                cmd = 0;
+            }   
+            resetSentDataTable();
+            printf("Time in system (day & time): %s\n", buffer);
+            printAllData(); 
             updateDeviceValues();
             printAllData();
-            resetConnectionsTable();
-
-            fastForwardTimeInMinutes(10);
-
-            iteration++;
-            cmd = 0;
-        }     
+        }   
     }
 
+    free(info);
     close(sockfd);
     return SUCCESS;
 }

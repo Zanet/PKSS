@@ -4,6 +4,36 @@ clear all;
 PORT_NUMBER = 8008;
 IP = '127.0.0.1';
 t = tcpip(IP, PORT_NUMBER, 'NetworkRole', 'client'); 
+
+
+%Send Initial Data
+
+fopen(t);
+fwrite(t, 'E!SendData!00.000!00.000');
+fclose(t);
+
+fopen(t);
+fwrite(t, 'R!SendData!11.11');
+fclose(t);
+
+fopen(t);
+fwrite(t, 'B!SendData!22.22');
+fclose(t);
+
+fopen(t);
+fwrite(t, 'W!SendData!33.333!444.44');
+fclose(t);
+
+
+
+
+
+
+
+
+
+
+
 fopen(t);
 fwrite(t, 'E!KeepAlive');
 fclose(t);
@@ -67,6 +97,7 @@ fclose(t);
 fopen(t);
 fwrite(t, 'B!GetParams');
 fclose(t);
+
 
 fopen(t);
 fwrite(t, 'R!GetParams');
