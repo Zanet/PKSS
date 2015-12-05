@@ -1,3 +1,8 @@
+//
+// Czesc serwera odpowiedzialna za rozmowe przez WebSocket z interfejsem
+// zgodne z RFC6455 http://tools.ietf.org/html/rfc6455 
+//
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,8 +12,7 @@
 //#include <cstring> // strstr
 #include <string.h>
 #include "sha1.h"
-#include "b64encode.h" // trzeba zainstalowac libb64.sourceforge.net/
-
+#include "b64encode.h"
 // compile:
 // gcc server.c -o server
 
@@ -43,8 +47,13 @@ int main( int argc, char *argv[] ) {
    
    /* Initialize socket structure */
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 5008;
-   
+   if(argc > 1)
+           portno = atoi(argv[1]);
+   else
+           portno = 5003;
+
+   printf("portno = %d\n", portno); 
+
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
    serv_addr.sin_port = htons(portno);
@@ -82,41 +91,49 @@ int main( int argc, char *argv[] ) {
 		  perror("ERROR reading from socket");
 	   }
 	   else
-	   {
-		   printf("Here is the message: %s\n",buffer);
+	   {    ("Here is the message: %s\n",buffer);
 		   
-		   // Seek for Key
+		   // Szukaj w buforze klucza
 		   const char keyString[] = "Sec-WebSocket-Key";
 		   char* index;
 		   char SocketKey[24];
 		   index = strstr(buffer, keyString);
 		   strncpy(SocketKey, index+19, 24);
-		   // Prepare Handshake
+		   // przygotuj Handshake
 		   unsigned char* SocketHash; //[SHA_DIGEST_LENGTH];
            char* Base64Hash;
            char MagicString[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-		   // zrobic SHA klucza, instrukcja w kodzie index.html (link)
+           // TEST ze znanym kluczem
+           // char TestKey[24] = "dGhlIHNhbXBsZSBub25jZQ==";
+           // strncpy(SocketKey, TestKey, 24);
+           // oczekiwany wynik po base64: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+
+		   // zrobic SHA klucza i Magic Stringa 
 		   sha1nfo s;
            sha1_init(&s);
 		   sha1_write(&s, SocketKey, 24);
            sha1_write(&s, MagicString, 36); // albo 32 bez pauz
 		   SocketHash = sha1_result(&s); 
 
-           //printKey(SocketKey, 24);    
-		   printf("\nKlucz Websocket: \n", SocketKey);
+		   printf("\nKlucz Websocket: %.*s\n", 24, SocketKey);
 		   printf("SHA1 Klucz+Magic: %s\n", SocketHash);
 		   printf("SHA1 jako hex string: "); printHash(SocketHash);
 
            // Base64 encode
+           SocketHash[20] = 0; // encode() musi wiedziec gdzie jest koniec
            Base64Hash = encode(SocketHash);
            printf("Base64 encoding: %s\n", Base64Hash);
 
-		   //strcpy(response_buf, "HTTP Response");
-	   	   //n = write( newsockfd, response_buf, 255);
+		   strcpy(response_buf, "HTTP/1.1 101 Switching Protocols\r\n");
+           strcat(response_buf, "Upgrade: websocket\r\n");
+           strcat(response_buf, "Connection: Upgrade\r\n");
+           strcat(response_buf, "Sec-Websocket-Accept: ");
+           strcat(response_buf, Base64Hash);
+           printf("%s", response_buf);
+	   	   n = write( newsockfd, response_buf, 255);
 	   }
-	   
    }
-   
+   close(sockfd);
    return 0;
 }
