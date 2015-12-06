@@ -2,7 +2,7 @@
 #define __PKSS_STRUCTS__
 
 #include <cstring>
-const int MAX_RECORD_SIZE = 8;
+const int MAX_RECORD_SIZE = 10;
 
 
 typedef struct {

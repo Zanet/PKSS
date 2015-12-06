@@ -211,10 +211,13 @@ int main(int argc, char* argv[])
             close(sockfd2);
             break;             
         }
+        
 
-        const char separator = '!';
-        char *id = strtok(inBuf, &separator);
-        char *command = strtok(NULL, &separator);
+        if(strchr(inBuf, '!')) //string contains '!'
+        {
+            const char separator = '!';
+            char *id = strtok(inBuf, &separator);
+            char *command = strtok(NULL, &separator);        
         if(id != NULL && command != NULL)
         {
             printf("ID: %s\n", id);
@@ -333,7 +336,7 @@ int main(int argc, char* argv[])
 
             char *data1 = NULL;
             char *data2 = NULL;
-
+            
             switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
             {
                 case 0:
@@ -378,6 +381,7 @@ int main(int argc, char* argv[])
                 default:
                     printf("Unknown client has sent 'Data'\n");
             }
+        }
         }
 
         cmd++;
