@@ -20,8 +20,20 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         print 'message received: %s' % message
         # Reverse Message and send it back
-        print 'sending back message: %r' % (float(message)+7) #message[::-1]
-        self.write_message( str(float(message)+7)) #message[::-1])
+        print 'sending back message: %r' % (message)
+        
+        if message == 'wykres-wymiennik':
+            chartFile = open('wykres-wymiennik.txt', 'r')
+            chart = chartFile.read();
+            chartFile.close();
+            self.write_message(str(chart))
+
+        else:
+            # wyslij dane do serwera c przez plik
+            target = open('nastawy.txt', 'w');
+            target.write(str(message));
+            target.close();
+            self.write_message(message)
 
     def on_close(self):
         print 'connection close'

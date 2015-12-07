@@ -67,6 +67,18 @@
             ws.send($("#message").val());
         });
  
+ 		// Wyslij nastawy
+        $("#send_nastawy").click(function(evt) {
+            log("Wysylam nastawy: "+$("#nastawy").val());
+            ws.send($("#nastawy").val());
+        });
+ 
+        // Zapytanie o wykres
+        $("#send").click(function(evt) {
+            log("Chcemy wykres: "+$("#wykres-wymiennik").val());
+            ws.send($("#wykres-wymiennik").val());
+        });
+
       });
     </script>
 
@@ -125,6 +137,15 @@ function socket() {
         <input type="number" id="nastawy" value="12"/><br />
         <input type="submit" id="send_nastawy" value="send_nastawy" />
     </div>
+
+    <div id="wykres_details">
+        </br></br>
+        <label for="wykres">Wykres:</label>
+        <input type="text" id="wykres-wymiennik" value="wykres-wymiennik"/><br />
+        <input type="submit" id="send_wykres" value="send_wykres" />
+    </div>
+
+
     <div id="message_details">
         </br></br>
         <label for="message">Nastawy dzialajace:</label>
