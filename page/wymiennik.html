@@ -8,6 +8,69 @@
       <meta name="Author" content="Filip Kubicz" />
       <link rel="Shortcut icon" href="favicon.ico" />
       <link rel="Stylesheet" type="text/css" href="style.css" />
+
+
+       <script src="http://code.jquery.com/jquery.min.js"></script>
+       <script>
+ 
+      // log function
+      log = function(data){
+        $("div#terminal").prepend("</br>" +data);
+        console.log(data);
+      };
+ 
+      $(document).ready(function () {
+        $("div#message_details").hide()
+ 
+        var ws;
+ 
+        $("#open").click(function(evt) {
+          evt.preventDefault();
+ 
+          var host = $("#host").val();
+          var port = $("#port").val();
+          var uri = $("#uri").val();
+ 
+          // create websocket instance
+          ws = new WebSocket("ws://" + host + ":" + port + uri);
+           
+          // Handle incoming websocket message callback
+          ws.onmessage = function(evt) {
+            log("Message Received: " + evt.data)
+            alert("message received: " + evt.data);
+            };
+ 
+          // Close Websocket callback
+          ws.onclose = function(evt) {
+            log("***Connection Closed***");
+            alert("Connection close");
+            $("#host").css("background", "#ff0000"); 
+            $("#port").css("background", "#ff0000"); 
+            $("#uri").css("background",  "#ff0000");
+            $("div#message_details").empty();
+ 
+            };
+ 
+          // Open Websocket callback
+          ws.onopen = function(evt) { 
+            $("#host").css("background", "#00ff00"); 
+            $("#port").css("background", "#00ff00"); 
+            $("#uri").css("background", "#00ff00");
+            $("div#message_details").show();
+            log("***Connection Opened***");
+          };
+        });
+ 
+        // Send websocket message function
+        $("#send").click(function(evt) {
+            log("Sending Message: "+$("#message").val());
+            ws.send($("#message").val());
+        });
+ 
+      });
+    </script>
+
+
 </head>
 
 <body text=white>
@@ -46,16 +109,44 @@ function socket() {
 
 <h1>Wymiennik ciep³a</h2>
 
+ <h1>WebSockets Hello World</h1>
+    <div id="connection_details">
+      <label for="host">host:</label>
+      <input type="text" id="host" value="localhost" style="background:#ff0000;"/><br />
+      <label for="port">port:</label>
+      <input type="text" id="port" value="8888" style="background:#ff0000;"/><br />
+      <label for="uri">uri:</label>
+      <input type="text" id="uri" value="/ws" style="background:#ff0000;"/><br />
+      <input type="submit" id="open" value="open" />
+    </div>
+     <div id="nastawy_details">
+        </br></br>
+        <label for="nastawy">Nastawy do dodania:</label>
+        <input type="number" id="nastawy" value="12"/><br />
+        <input type="submit" id="send_nastawy" value="send_nastawy" />
+    </div>
+    <div id="message_details">
+        </br></br>
+        <label for="message">Nastawy dzialajace:</label>
+        <input type="number" id="message" value="4.25"/><br />
+        <input type="submit" id="send" value="send" />
+    </div>
+    <div id="terminal">
+        
+    </div>
+
 <div class="metro">
 <h3>
 Nastawy regulatora PI wymiennika
 </h3>
 <p>
+
+
 <form>
 P: <input type="number" name="P" value="1" min="0"><br>
 I: <input type="number" name="I" value="1" min="0"><br>
 D: <input type="number" name="I" value="0" min="0"><br>
-<input type="submit" value="Submit" onclick="socket()">
+<input type="submit" id="send" value="send" />
 </form>
 </p>
 </div>
