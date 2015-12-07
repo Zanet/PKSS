@@ -30,7 +30,7 @@ while(1)
         if(strcmp(text(1:3),'sta')) %%oczekiwanie na start symulacji
             wait=0;
         end
-        pause(0.2); % okres co jaki wysy≥ana jest kolejna komenda keepalive
+        pause(0.2); % okres co jaki wysy≈Çana jest kolejna komenda keepalive
     end
     
     %% Odebranie czasu z serwera
@@ -61,7 +61,7 @@ while(1)
     end
     fclose(t);
     
-    % przyk≥adowe parsowanie odebranych danych
+    % przyk≈Çadowe parsowanie odebranych danych
     %
 %     Tpm=str2num(text(2:4))+0.01*str2num(text(6:7));
 %     if(text(1)=='-')
@@ -126,7 +126,7 @@ Tzco = 1.07;
     % stworzenie ramki do wyslania 
     % gotowe wysylanie danych dla kazdego
     %Data=sprintf('%+03.2f!%03.2f',To,Tzm); %E
-    Data = sprintf('%+3.2f!%+3.2f',Tpm,Tzco) %W
+    Data = sprintf('%+07.2f!%+3.2f',Tpm,Tzco) %W
 
     %Data=sprintf('%+03.2f',Tpco); %B
     %Data=sprintf('%+03.4f',Fzm); %R
