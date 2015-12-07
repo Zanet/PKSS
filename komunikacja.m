@@ -126,7 +126,7 @@ Tzco = 1.07;
     % stworzenie ramki do wyslania 
     % gotowe wysylanie danych dla kazdego
     %Data=sprintf('%+03.2f!%03.2f',To,Tzm); %E
-    Data = sprintf('%+07.2f!%+3.2f',Tpm,Tzco) %W
+    Data = sprintf('%+07.2f!%+07.2f',Tpm,Tzco) %W
 
     %Data=sprintf('%+03.2f',Tpco); %B
     %Data=sprintf('%+03.4f',Fzm); %R
