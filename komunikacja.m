@@ -49,13 +49,13 @@ while(1)
     %% miejsce na odebranie danych z serwera i sparsowanie
 
     fopen(t);
-    fwrite(t, [ID,'!GetParams']);
+    fwrite(t, ['B','!GetParams']);
     
     %Tutaj uwaga: serwer na GetParams wysyla tekst o dlugosci
     % ilosc parametrow * DLUGOSC_REKORDU (10) + ilosc parametrow - 1
     %dla 3 parametrow mamy 32,
     %dla 2 parametrow mamy 21
-    [A, COUNT] = fread(t, 32); % 3 parametry pobiera
+    [A, COUNT] = fread(t, 21); % 3 parametry pobiera
     if(COUNT > 0)
         text = char(A.')
     end
@@ -118,8 +118,8 @@ while(1)
 %To=20.4;
 %Tzm=-23.93;
 
-Tpm = 20.4;
-Tzco = 1.07;
+Tpm = 201.3241;
+Tzco = 111.0077;
 
     %% mijesce na wyslanie danych na serwer: sparsowanie 
 
