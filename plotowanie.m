@@ -9,3 +9,4 @@ set(xl,'FontSize',14);
 set(yl,'FontSize',14);
 set(gca,'Fontsize',16);
 axis([Czas(1) Czas(end) min([T_o; T_zco; T_pco])*0.9 max([T_o; T_zco; T_pco])*1.1 ]);
+saveas('Wykres1.png');
