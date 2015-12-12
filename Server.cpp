@@ -37,15 +37,21 @@ char addr_buf[INET_ADDRSTRLEN];
 
 time_t timer;
 struct tm* info;
+FILE *logger;
+FILE *csvPrinter;
 char buffer[9];
+char logBuffer[100];
 
-/*void logToFile(int iteration, int command, const char* dataToBeLogged)
+void logToFile()
 {
     static FILE *fp;
-    fp = fopen("logs/a.log", "a");
-    fprintf(fp, "%s", dataToBeLogged);
-    fclose(fp);
-}*/
+    logger = fopen("2015pkss.log", "a");
+    if(logger)
+    {
+        fprintf(logger, "%s", logBuffer);
+        fclose(logger);
+    }
+}
 
 
 void fastForwardTimeInMinutes(int minutes)
@@ -63,12 +69,36 @@ void fastForwardTimeInMinutes(int minutes)
 
 void printAllData()
 {
-    printf("--------DATA IN SYSTEM--------\n");
-    printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
-    printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
-    printf("| Budynek: %s\n", budynek_zeszle.T_pco);
-    printf("| Regulator: %s\n", regulator_zeszle.F_zm);
-    printf("------------------------------\n");
+    //sprintf(logBuffer, "[%s] dummy printf\n", buffer);   
+
+    logger = fopen("2015pkss.log", "a");
+    if(logger)
+    {
+        fprintf(logger, "--------DATA IN SYSTEM--------\n");
+        fprintf(logger, "| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
+        fprintf(logger, "| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
+        fprintf(logger, "| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
+        fprintf(logger, "| Regulator: %s\n", regulator_zeszle.F_zm);
+        fprintf(logger, "------------------------------\n");
+        fclose(logger);
+    }
+
+        printf("--------DATA IN SYSTEM--------\n");
+        printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
+        printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
+        printf("| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
+        printf("| Regulator: %s\n", regulator_zeszle.F_zm);
+        printf("------------------------------\n");
+    csvPrinter = fopen("data.csv", "a");
+    if(csvPrinter)
+    {
+                           // D  H   M   T1  T2  T3
+
+        char buffer[100];
+        sprintf(buffer, "%d, %d, %d, %s, %s, %s\n", info->tm_mday, info->tm_hour, info->tm_min, wymiennik_zeszle.T_zco, elektrocieplownia_zeszle.T_o, budynek_zeszle.T_pco);
+        fprintf(csvPrinter, "%s", buffer); 
+        fclose(csvPrinter);
+    }
 }
 
 
@@ -81,6 +111,7 @@ void updateDeviceValues()
     strncpy(wymiennik_zeszle.T_zco, wymiennik_obecne.T_zco, MAX_RECORD_SIZE);
 
     strncpy(budynek_zeszle.T_pco, budynek_obecne.T_pco, MAX_RECORD_SIZE);
+    strncpy(budynek_zeszle.F_zco, budynek_obecne.F_zco, MAX_RECORD_SIZE);
 
     strncpy(regulator_zeszle.F_zm, regulator_obecne.F_zm, MAX_RECORD_SIZE);
 }
@@ -166,6 +197,7 @@ int main(int argc, char* argv[])
         exit(4);
     }
 
+    
 
     resetConnectionsTable();
     resetSentDataTable();
@@ -187,20 +219,23 @@ int main(int argc, char* argv[])
         printf("%d.%d Waiting for connection.\n", iteration, cmd);
         addrlen = sizeof(cli_name);
         sockfd2 = accept(sockfd, (struct sockaddr*) &cli_name, &addrlen);
-        if (sockfd2 == -1) {
+        if(sockfd2 == -1) {
             printf("accept() error\n");
-            exit(1);
+            //sockfd2 = accept(sockfd, (struct sockaddr*) &cli_name, &addrlen);
+            continue;
         }
         status = recv(sockfd2, inBuf, sizeof(inBuf), 0);
         if (status == -1) {
             printf("recv() error\n");
-            exit(5);
+            //status = recv(sockfd2, inBuf, sizeof(inBuf), 0);
+            //exit(5);
+            continue;
         }
         
         if ( inet_ntop( AF_INET, &cli_name.sin_addr, addr_buf, INET_ADDRSTRLEN ) == NULL )
         {
             printf("Ip address problem\n"); 
-            exit(1); 
+            //exit(1); 
         }
        
         printf("Received: %s\n", inBuf);
@@ -218,170 +253,181 @@ int main(int argc, char* argv[])
             const char separator = '!';
             char *id = strtok(inBuf, &separator);
             char *command = strtok(NULL, &separator);        
-        if(id != NULL && command != NULL)
-        {
-            printf("ID: %s\n", id);
-            printf("Command: %s\n", command);
-        }        
-        //useless - every client is seen in the same way
-        //printf( "...from [%s:%d]\n",addr_buf, ntohs( cli_name.sin_port ));       
- 
-        unsigned int clientNumber = 255; //0 - E, 1 - W, 2 - B, 3 - R,4 - 
-
-        if (strcmp(id, "E") == 0)
-        {
-            clientNumber = 0;
-            printf("E - Elektrociepłownia\n");
-        }
-        else if(strcmp(id, "W") == 0)
-        {
-            clientNumber = 1;
-            printf("W - Wymiennik ciepła\n");
-        } 
-        else if(strcmp(id, "B") == 0)
-        {
-            clientNumber = 2;
-            printf("B - Budynek\n");
-        } 
-        else if(strcmp(id, "R") == 0)
-        {
-            clientNumber = 3;
-            printf("R - Regulator\n");
-        }
-        else 
-        {
-            printf("Nie rozpoznano hosta\n");
-        }      
-        
-        if(strcmp(command, "KeepAlive") == 0)
-        {
-            const char* nop = "nop";
-            const char* start = "sta";
-            if(clientNumber < NUMBER_OF_DEVICES)
+            if(id != NULL && command != NULL)
             {
-                deviceConnected[clientNumber] = true;      
+                printf("ID: %s ", id);
+                printf("Command: %s\n", command);
+            }        
+            //useless - every client is seen in the same way
+            //printf( "...from [%s:%d]\n",addr_buf, ntohs( cli_name.sin_port ));       
+     
+            unsigned int clientNumber = 255; //0 - E, 1 - W, 2 - B, 3 - R,4 - 
+
+            if (strcmp(id, "E") == 0)
+            {
+                clientNumber = 0;
+                //printf("E - Elektrociepłownia\n");
             }
+            else if(strcmp(id, "W") == 0)
+            {
+                clientNumber = 1;
+                //printf("W - Wymiennik ciepła\n");
+            } 
+            else if(strcmp(id, "B") == 0)
+            {
+                clientNumber = 2;
+                //printf("B - Budynek\n");
+            } 
+            else if(strcmp(id, "R") == 0)
+            {
+                clientNumber = 3;
+                //printf("R - Regulator\n");
+            }
+            else 
+            {
+                printf("Nie rozpoznano hosta\n");
+            }      
             
-            if(allClientsConnected())
-            {   
-                printf("Everyone is connected! We can start\n");
-                send(sockfd2, start, sizeof("sta"), 0);       
-            }
-            else
-            {   
-                //printf("We are still missing someone :(\n");
-                send(sockfd2, nop, sizeof("nop"), 0);
-            }               
-        }
-        else if(strcmp(command, "GetTime") == 0)
-        {
-            printf("Date set to: %s\n", buffer);
-
-            send(sockfd2, buffer, sizeof("DD HH:MM"), 0);
-        }
-        else if(strcmp(command, "GetParams") == 0)
-        {
-            int dataSize = 0;
-            char strTo[3*MAX_RECORD_SIZE+2] = "";
-            switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
+            if(strcmp(command, "KeepAlive") == 0)
             {
-                case 0:
-                    printf("Elektrocieplownia - zadnych danych\n");
-                    break;
-                case 1:
-                    printf("Wymiennik - Tpco, Tzm, Fzm\n");
-                    dataSize = 3*MAX_RECORD_SIZE+2;   
-   
-                    strcat(strTo, budynek_zeszle.T_pco);
-                    strcat(strTo, "!");
-                    strcat(strTo, elektrocieplownia_zeszle.T_zm);
-                    strcat(strTo, "!");
-                    strcat(strTo, regulator_zeszle.F_zm);  
-
-                    send(sockfd2, strTo, dataSize, 0);
-                    break;
-                case 2:
-                    printf("Budynek - Tzco, To\n");
-                    dataSize = 2*MAX_RECORD_SIZE+1;   
-
-                    strcat(strTo, wymiennik_zeszle.T_zco);
-                    strcat(strTo, "!");
-                    strcat(strTo, elektrocieplownia_zeszle.T_o);
- 
-                    send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
-                    break;
-                case 3:
-                    printf("Regulator - Tzco, To\n");
-                    dataSize = 2*MAX_RECORD_SIZE+1;   
-
-                    strcat(strTo, wymiennik_zeszle.T_zco);
-                    strcat(strTo, "!");
-                    strcat(strTo, elektrocieplownia_zeszle.T_o);
- 
-                    send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
-                    break;
-                default:
-                    printf("Unknown client has sent 'GetParams'\n");
-            }
-        }
-
-        else if(strcmp(command, "SendData") == 0)
-        {
-            //memset(inBuf, 0, BUFFER_SIZE);
-
-            if(clientNumber < NUMBER_OF_DEVICES)
-            {
-                deviceSentData[clientNumber] = true;
-            }  
-
-            char *data1 = NULL;
-            char *data2 = NULL;
-            
-            switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
-            {
-                case 0:
-                    data1 = strtok(NULL, &separator);
-                    data2 = strtok(NULL, &separator);
-                    if(data1 && data2)
-                    {
-                        printf("We got %s and %s\n", data1, data2);
-                        strncpy(elektrocieplownia_obecne.T_o, data1, MAX_RECORD_SIZE);
-                        strncpy(elektrocieplownia_obecne.T_zm, data2, MAX_RECORD_SIZE);               
-                    }                
-                    break;
+                const char* nop = "nop";
+                const char* start = "sta";
+                if(clientNumber < NUMBER_OF_DEVICES)
+                {
+                    deviceConnected[clientNumber] = true;      
+                }
                 
-                case 1:
-                    data1 = strtok(NULL, &separator);
-                    data2 = strtok(NULL, &separator);
-                    if(data1 && data2)
-                    {
-                        printf("We got %s and %s\n", data1, data2);
-                        strncpy(wymiennik_obecne.T_pm, data1, MAX_RECORD_SIZE);
-                        strncpy(wymiennik_obecne.T_zco, data2, MAX_RECORD_SIZE);               
-                    } 
-                    break;
-               case 2:
-                    printf("Received data: %s\n", inBuf);
-                    data1 = strtok(NULL, &separator);
-                    if(data1)
-                    {
-                        printf("We got  %s\n", data1);
-                        strncpy(budynek_obecne.T_pco, data1, MAX_RECORD_SIZE);              
-                    } 
-                    break;
-               case 3:
-                    data1 = strtok(NULL, &separator);
-                    if(data1)
-                    {
-                        printf("We got %s\n", data1);
-                        strncpy(regulator_obecne.F_zm, data1, MAX_RECORD_SIZE);               
-                    } 
-                    break;
-
-                default:
-                    printf("Unknown client has sent 'Data'\n");
+                if(allClientsConnected())
+                {   
+                    printf("Everyone is connected! We can start\n");
+                    //fastForwardTimeInMinutes(10);
+                    //resetConnectionsTable();
+                    send(sockfd2, start, sizeof("sta"), 0);       
+                }
+                else
+                {   
+                    //printf("We are still missing someone :(\n");
+                    send(sockfd2, nop, sizeof("nop"), 0);
+                }               
             }
-        }
+            else if(strcmp(command, "GetTime") == 0)
+            {
+                printf("Date set to: %s\n", buffer);
+
+                send(sockfd2, buffer, sizeof("DD HH:MM"), 0);
+            }
+            else if(strcmp(command, "GetParams") == 0)
+            {
+                int dataSize = 0;
+                char strTo[4*MAX_RECORD_SIZE+3] = "";
+                switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
+                {
+                    case 0:
+                        //printf("Elektrocieplownia - zadnych danych\n");
+                        dataSize = 3*MAX_RECORD_SIZE+2; 
+                        strcat(strTo, wymiennik_zeszle.T_pm);
+                        send(sockfd2, strTo, dataSize, 0);
+                        break;
+                    case 1:
+                        //printf("Wymiennik - Tpco, Tzm, Fzm\n");
+                        dataSize = 4*MAX_RECORD_SIZE+3;   
+       
+                        strcat(strTo, budynek_zeszle.T_pco);
+                        strcat(strTo, "!");
+                        strcat(strTo, elektrocieplownia_zeszle.T_zm);
+                        strcat(strTo, "!");
+                        strcat(strTo, regulator_zeszle.F_zm);  
+                        //new 
+                        strcat(strTo, "!");
+                        strcat(strTo, budynek_zeszle.F_zco);
+                        send(sockfd2, strTo, dataSize, 0);
+                        break;
+                    case 2:
+                        //printf("Budynek - Tzco, To\n");
+                        dataSize = 2*MAX_RECORD_SIZE+1;   
+
+                        strcat(strTo, wymiennik_zeszle.T_zco);
+                        strcat(strTo, "!");
+                        strcat(strTo, elektrocieplownia_zeszle.T_o);
+     
+                        send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                        break;
+                    case 3:
+                        //printf("Regulator - Tzco, To\n");
+                        dataSize = 2*MAX_RECORD_SIZE+1;   
+
+                        strcat(strTo, wymiennik_zeszle.T_zco);
+                        strcat(strTo, "!");
+                        strcat(strTo, elektrocieplownia_zeszle.T_o);
+     
+                        send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                        break;
+                    default:
+                        printf("Unknown client has sent 'GetParams'\n");
+                }
+            }
+
+            else if(strcmp(command, "SendData") == 0)
+            {
+                //memset(inBuf, 0, BUFFER_SIZE);
+
+                if(clientNumber < NUMBER_OF_DEVICES)
+                {
+                    deviceSentData[clientNumber] = true;
+                }  
+
+                char *data1 = NULL;
+                char *data2 = NULL;
+                //strtok(NULL,...) perform strtok again on inBuf
+                switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
+                {
+                    case 0:
+                        data1 = strtok(NULL, &separator);
+                        data2 = strtok(NULL, &separator);
+                        if(data1 && data2)
+                        {
+                            printf("We got %s and %s\n", data1, data2);
+                            strncpy(elektrocieplownia_obecne.T_o, data1, MAX_RECORD_SIZE);
+                            strncpy(elektrocieplownia_obecne.T_zm, data2, MAX_RECORD_SIZE);               
+                        }                
+                        break;
+                    
+                    case 1:
+                        data1 = strtok(NULL, &separator);
+                        data2 = strtok(NULL, &separator);
+                        if(data1 && data2)
+                        {
+                            printf("We got %s and %s\n", data1, data2);
+                            strncpy(wymiennik_obecne.T_pm, data1, MAX_RECORD_SIZE);
+                            strncpy(wymiennik_obecne.T_zco, data2, MAX_RECORD_SIZE);               
+                        } 
+                        break;
+                   case 2:
+                        //printf("Received data: %s\n", inBuf);
+                        data1 = strtok(NULL, &separator);
+                        data2 = strtok(NULL, &separator);
+                        if(data1)
+                        {
+                            printf("We got  %s and %s\n", data1, data2);
+                            strncpy(budynek_obecne.T_pco, data1, MAX_RECORD_SIZE);
+                            strncpy(budynek_obecne.F_zco, data2, MAX_RECORD_SIZE);              
+                        } 
+                        break;
+                   case 3:
+                        data1 = strtok(NULL, &separator);
+                        if(data1)
+                        {
+                            printf("We got %s\n", data1);
+                            strncpy(regulator_obecne.F_zm, data1, MAX_RECORD_SIZE);               
+                        } 
+                        break;
+
+                    default:
+                        printf("Unknown client has sent 'Data'\n");
+
+                    updateDeviceValues();
+                }
+            }
         }
 
         cmd++;
@@ -390,19 +436,25 @@ int main(int argc, char* argv[])
         if(allClientsSentData())
         {
             if(allClientsConnected())
-            {               
-                printf("Iteration is complete, go to next\n");
+            {                              
                 resetConnectionsTable();
-                fastForwardTimeInMinutes(10);
+                printf("Iteration is complete, go to next\n");
+                
                 iteration++;
                 cmd = 0;
-            }   
+            } 
+  
+            
+            fastForwardTimeInMinutes(10);
             resetSentDataTable();
+            sprintf(logBuffer, "Time in system (day & time): %s\n", buffer);
             printf("Time in system (day & time): %s\n", buffer);
+            logToFile();
             printAllData(); 
             updateDeviceValues();
             printAllData();
-        }   
+        }  
+        close(sockfd2); 
     }
 
     free(info);

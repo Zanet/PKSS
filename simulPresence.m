@@ -5,23 +5,22 @@ PORT_NUMBER = 8008;
 IP = '127.0.0.1';
 t = tcpip(IP, PORT_NUMBER, 'NetworkRole', 'client'); 
 
-
-%Send Initial Data
+%Initial Data
 
 fopen(t);
-fwrite(t, 'E!SendData!00.000!00.000');
+fwrite(t, 'E!SendData!020.1100!000.3010');
 fclose(t);
 
 fopen(t);
-fwrite(t, 'R!SendData!11.11');
+fwrite(t, 'R!SendData!101.2211');
 fclose(t);
 
 fopen(t);
-fwrite(t, 'B!SendData!22.22');
+fwrite(t, 'B!SendData!257.2333');
 fclose(t);
 
 fopen(t);
-fwrite(t, 'W!SendData!33.333!444.44');
+fwrite(t, 'W!SendData!333.3133!444.1144');
 fclose(t);
 
 
@@ -67,60 +66,60 @@ fopen(t);
 fwrite(t, 'E!KeepAlive');
 fclose(t);
 
-%GetTime
+% %GetTime
 fopen(t);
 fwrite(t, 'E!GetTime');
 fclose(t);
-
-fopen(t);
-fwrite(t, 'R!GetTime');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'B!GetTime');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'W!GetTime');
-fclose(t);
-
-
-%GetParams
-fopen(t);
-fwrite(t, 'E!GetParams');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'W!GetParams');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'B!GetParams');
-fclose(t);
-
-
-fopen(t);
-fwrite(t, 'R!GetParams');
-fclose(t);
-
-%SendData
-
-fopen(t);
-fwrite(t, 'E!SendData!13.456!14.00');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'R!SendData!88.14');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'B!SendData!76.56');
-fclose(t);
-
-fopen(t);
-fwrite(t, 'W!SendData!99.456!174.00');
-fclose(t);
-
+% 
+% fopen(t);
+% fwrite(t, 'R!GetTime');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'B!GetTime');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'W!GetTime');
+% fclose(t);
+% 
+% 
+% %GetParams
+% fopen(t);
+% fwrite(t, 'E!GetParams');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'W!GetParams');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'B!GetParams');
+% fclose(t);
+% 
+% 
+% fopen(t);
+% fwrite(t, 'R!GetParams');
+% fclose(t);
+% 
+% %SendData
+% 
+% fopen(t);
+% fwrite(t, 'E!SendData!13.456!14.00');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'R!SendData!88.14');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'B!SendData!76.56');
+% fclose(t);
+% 
+% fopen(t);
+% fwrite(t, 'W!SendData!99.456!174.00');
+% fclose(t);
+% 
 
 
 
