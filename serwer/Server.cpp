@@ -36,29 +36,46 @@ void logToFile()
     }
 }
 
+#define BUDYNEK 1
+#define WYMIENNIK 2
 
-void czytaj_nastawy()
+void czytaj_nastawy(char dlaKogo)
 {
         char bufor[40];
         char *data;
         char separator = ',';
-        FILE *nastawy = fopen("nastawy.txt", "r");
-        
-        if(nastawy)
-        {   
-            fscanf(nastawy, "%s", bufor);
-            //printf("Bufor: %s\n", bufor);
+        FILE * nastawy;
 
-            data = strtok(bufor, &separator);
-            strncpy(regulator_zeszle.P, data, MAX_RECORD_SIZE);
-            data = strtok(NULL, &separator);
-            strncpy(regulator_zeszle.I, data, MAX_RECORD_SIZE);
+        if(dlaKogo == BUDYNEK) {
+            nastawy = fopen("nastawy_bud.txt", "r");
+            if(nastawy)
+            {   
+                fscanf(nastawy, "%s", bufor);
+                //printf("Bufor: %s\n", bufor);
 
-            //printf("Regulator.P: %s\n", regulator_zeszle.P);
-            //printf("Regulator.I: %s\n", regulator_zeszle.I);
-
-            fclose(nastawy);
+                data = strtok(bufor, &separator);
+                strncpy(budynek_zeszle.P, data, MAX_RECORD_SIZE);
+                data = strtok(NULL, &separator);
+                strncpy(budynek_zeszle.I, data, MAX_RECORD_SIZE);
+                fclose(nastawy);
+            }
         }
+        else if (dlaKogo == WYMIENNIK) {
+            nastawy = fopen("nastawy_wym.txt", "r");
+            if(nastawy)
+            {   
+                fscanf(nastawy, "%s", bufor);
+                //printf("Bufor: %s\n", bufor);
+
+                data = strtok(bufor, &separator);
+                strncpy(regulator_zeszle.P, data, MAX_RECORD_SIZE);
+                data = strtok(NULL, &separator);
+                strncpy(regulator_zeszle.I, data, MAX_RECORD_SIZE);
+                fclose(nastawy);
+            }
+        }
+
+        
 }
 
 
@@ -92,7 +109,7 @@ void printAllData()
     printf("--------DATA IN SYSTEM--------\n");
     printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
     printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
-    printf("| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
+    printf("| Budynek: %s, %s, %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco, budynek_zeszle.P, budynek_zeszle.I);
     printf("| Regulator: %s, %s, %s\n", regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I);
     printf("------------------------------\n");
     
@@ -102,15 +119,15 @@ void printAllData()
         char CSVbuffer[150];
         if(iteration == 0)
         {   
-            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, P, I\n");      
+            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, Wym_P, Wym_I, Bud_P, Bud_I\n");      
             fprintf(csvPrinter, "%s", CSVbuffer);   
         }
         
-        sprintf(CSVbuffer, "%d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
+        sprintf(CSVbuffer, "%d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
                 info->tm_mday, info->tm_hour, info->tm_min,
                 elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm,
                 wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco,
-                budynek_zeszle.T_pco, budynek_zeszle.F_zco,
+                budynek_zeszle.T_pco, budynek_zeszle.F_zco, budynek_zeszle.P, budynek_zeszle.I,
                 regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I);
         fprintf(csvPrinter, "%s", CSVbuffer); 
         fclose(csvPrinter);
@@ -217,7 +234,8 @@ int main(int argc, char* argv[])
 
     resetConnectionsTable();
     resetSentDataTable();
-    czytaj_nastawy();
+    czytaj_nastawy(WYMIENNIK);
+    czytaj_nastawy(BUDYNEK);
     //use the following if you want to start from present time
     //timer = time(NULL); //initial time the same as current system time
     //info = localtime(&timer);
@@ -359,17 +377,21 @@ int main(int argc, char* argv[])
                         break;
                     case 2:
                         //printf("Budynek - Tzco, To\n");
-                        dataSize = 2*MAX_RECORD_SIZE+1;   
+                        czytaj_nastawy(BUDYNEK);
+                        dataSize = 4*MAX_RECORD_SIZE+3;   
 
                         strcat(strTo, wymiennik_zeszle.T_zco);
                         strcat(strTo, "!");
                         strcat(strTo, elektrocieplownia_zeszle.T_o);
-     
+                        strcat(strTo, "!");
+                        strcat(strTo, budynek_zeszle.P);
+                        strcat(strTo, "!");
+                        strcat(strTo, budynek_zeszle.I);
                         send(sockfd2, strTo, dataSize, 0);
                         break;
                     case 3:
                         //printf("Regulator - Tzco, To\n");
-                        czytaj_nastawy();
+                        czytaj_nastawy(WYMIENNIK);
                         dataSize = 4*MAX_RECORD_SIZE+3;   
 
                         strcat(strTo, wymiennik_zeszle.T_zco);
