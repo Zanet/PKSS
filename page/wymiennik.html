@@ -70,7 +70,7 @@
  		// Wyslij nastawy
         $("#send_nastawy").click(function(evt) {
             log("Wysylam nastawy: "+$("#nastawy").val());
-            ws.send($("#nastawy_P").val()+","+$("#nastawy_I").val());
+            ws.send("nastawy-wymiennik;"+$("#nastawy_P").val()+","+$("#nastawy_I").val());
         });
  
         // Zapytanie o wykres
@@ -121,7 +121,7 @@ function socket() {
 
 <h1>Wymiennik ciep³a</h2>
 
- <h1>WebSockets Hello World</h1>
+ <h3>WebSockets</h3>
     <div id="connection_details">
       <label for="host">host:</label>
       <input type="text" id="host" value="localhost" style="background:#ff0000;"/><br />
@@ -150,13 +150,6 @@ function socket() {
         <input type="submit" id="send_wykres" value="send_wykres" />
     </div>
 
-
-    <div id="message_details">
-        </br></br>
-        <label for="message">Nastawy dzialajace:</label>
-        <input type="number" id="message" value="4.25"/><br />
-        <input type="submit" id="send" value="send" />
-    </div>
     <div id="terminal">
         
     </div>

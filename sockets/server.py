@@ -22,18 +22,31 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         # Reverse Message and send it back
         print 'sending back message: %r' % (message)
         
-        if message == 'wykres-wymiennik':
-            chartFile = open('wykres-wymiennik.txt', 'r')
-            chart = chartFile.read();
-            chartFile.close();
+        if message == 'wykres-wymiennik': # tutaj chcemy odebrac caly wykres
+            #chartFile = open('wykres-wymiennik.txt', 'r')
+            chartFile = open('data.csv', 'r')
+            chart = chartFile.read()
+            chartFile.close()
+            print 'dane do wykresu: %r' % chart
             self.write_message(str(chart))
+    
+        else: # nastawy
+            params = message.split(';')
+            
+            if params[0] == 'nastawy-budynek':
+                target = open('nastawy_bud.txt', 'w')
+                target.write(str(params[1]));
+                target.close();
+                self.write_message(message)
 
-        else:
-            # wyslij dane do serwera c przez plik
-            target = open('nastawy.txt', 'w');
-            target.write(str(message));
-            target.close();
-            self.write_message(message)
+            elif params[0] == 'nastawy-wymiennik':
+                # wyslij dane do serwera c przez plik
+                target = open('nastawy_wym.txt', 'w');
+                target.write(str(params[1]));
+                target.close();
+                self.write_message(message)
+            else:
+                print 'nieznane zapytanie od przegladarki www!'
 
     def on_close(self):
         print 'connection close'
