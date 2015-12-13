@@ -70,11 +70,11 @@
  		// Wyslij nastawy
         $("#send_nastawy").click(function(evt) {
             log("Wysylam nastawy: "+$("#nastawy").val());
-            ws.send($("#nastawy").val());
+            ws.send($("#nastawy_P").val()+","+$("#nastawy_I").val());
         });
  
         // Zapytanie o wykres
-        $("#send").click(function(evt) {
+        $("#send_wykres").click(function(evt) {
             log("Chcemy wykres: "+$("#wykres-wymiennik").val());
             ws.send($("#wykres-wymiennik").val());
         });
@@ -131,10 +131,15 @@ function socket() {
       <input type="text" id="uri" value="/ws" style="background:#ff0000;"/><br />
       <input type="submit" id="open" value="open" />
     </div>
-     <div id="nastawy_details">
+     <div id="nastawy_P_details">
         </br></br>
-        <label for="nastawy">Nastawy do dodania:</label>
-        <input type="number" id="nastawy" value="12"/><br />
+        <label for="nastawy">Nastawa P:</label>
+        <input type="number" id="nastawy_P" value="12"/><br />
+    </div>
+    
+    <div id="nastawy_I_details">
+        <label for="nastawy">Nastawa I:</label>
+        <input type="number" id="nastawy_I" value="12"/><br />
         <input type="submit" id="send_nastawy" value="send_nastawy" />
     </div>
 
