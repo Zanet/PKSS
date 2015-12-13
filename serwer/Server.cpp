@@ -102,7 +102,7 @@ void printAllData()
         char CSVbuffer[150];
         if(iteration == 0)
         {   
-            sprintf(CSVbuffer, "day, hour, minute, T_o. T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, P, I\n");      
+            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, P, I\n");      
             fprintf(csvPrinter, "%s", CSVbuffer);   
         }
         
