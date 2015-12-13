@@ -1,18 +1,4 @@
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctime>
-#include <arpa/inet.h>
-#include <cstdio>
-#include <cstring>
 #include "pkss_structs.h"
-
-#define FAIL    (-1)
-#define SUCCESS (0)
-
 
 Elektrocieplownia elektrocieplownia_zeszle;
 Wymiennik wymiennik_zeszle;
@@ -23,8 +9,6 @@ Elektrocieplownia elektrocieplownia_obecne;
 Wymiennik wymiennik_obecne;
 Budynek budynek_obecne;
 Regulator regulator_obecne;
-
-
 
 const int BUFFER_SIZE = 4096;
 const int TIME_STR_SIZE = 12;
@@ -39,18 +23,42 @@ time_t timer;
 struct tm* info;
 FILE *logger;
 FILE *csvPrinter;
-char buffer[9];
+char TimeBuffer[9];
 char logBuffer[100];
 
 void logToFile()
 {
-    static FILE *fp;
     logger = fopen("2015pkss.log", "a");
     if(logger)
     {
         fprintf(logger, "%s", logBuffer);
         fclose(logger);
     }
+}
+
+
+void czytaj_nastawy()
+{
+        char bufor[40];
+        char *data;
+        char separator = ',';
+        FILE *nastawy = fopen("nastawy.txt", "r");
+        
+        if(nastawy)
+        {   
+            fscanf(nastawy, "%s", bufor);
+            //printf("Bufor: %s\n", bufor);
+
+            data = strtok(bufor, &separator);
+            strncpy(regulator_zeszle.P, data, MAX_RECORD_SIZE);
+            data = strtok(NULL, &separator);
+            strncpy(regulator_zeszle.I, data, MAX_RECORD_SIZE);
+
+            //printf("Regulator.P: %s\n", regulator_zeszle.P);
+            //printf("Regulator.I: %s\n", regulator_zeszle.I);
+
+            fclose(nastawy);
+        }
 }
 
 
@@ -64,39 +72,47 @@ void fastForwardTimeInMinutes(int minutes)
 
     //info->tm_min += minutes;
 
-    strftime(buffer, 9, "%d %H:%M", info);
+    strftime(TimeBuffer, 9, "%d %H:%M", info);
 }
+
+/*void printHeaderForCsv()
+{
+    char buffer[150];
+    csvPrinter = fopen("data.csv", "a");
+    if(csvPrinter)
+    {                                     //elektro   wymiennik     budynek      regulator
+        sprintf(buffer, "day, hour, minute, T_o. T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, P, I\n");      
+        fprintf(csvPrinter, "%s", buffer);  
+        fclose(csvPrinter);       
+    }
+}*/
 
 void printAllData()
 {
-    //sprintf(logBuffer, "[%s] dummy printf\n", buffer);   
-
-    logger = fopen("2015pkss.log", "a");
-    if(logger)
-    {
-        fprintf(logger, "--------DATA IN SYSTEM--------\n");
-        fprintf(logger, "| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
-        fprintf(logger, "| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
-        fprintf(logger, "| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
-        fprintf(logger, "| Regulator: %s\n", regulator_zeszle.F_zm);
-        fprintf(logger, "------------------------------\n");
-        fclose(logger);
-    }
-
-        printf("--------DATA IN SYSTEM--------\n");
-        printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
-        printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
-        printf("| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
-        printf("| Regulator: %s\n", regulator_zeszle.F_zm);
-        printf("------------------------------\n");
+    printf("--------DATA IN SYSTEM--------\n");
+    printf("| Elektrocieplownia: %s, %s\n", elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm);
+    printf("| Wymiennik: %s, %s\n", wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco);
+    printf("| Budynek: %s, %s\n", budynek_zeszle.T_pco, budynek_zeszle.F_zco);
+    printf("| Regulator: %s, %s, %s\n", regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I);
+    printf("------------------------------\n");
+    
     csvPrinter = fopen("data.csv", "a");
     if(csvPrinter)
     {
-                           // D  H   M   T1  T2  T3
-
-        char buffer[100];
-        sprintf(buffer, "%d, %d, %d, %s, %s, %s\n", info->tm_mday, info->tm_hour, info->tm_min, wymiennik_zeszle.T_zco, elektrocieplownia_zeszle.T_o, budynek_zeszle.T_pco);
-        fprintf(csvPrinter, "%s", buffer); 
+        char CSVbuffer[150];
+        if(iteration == 0)
+        {   
+            sprintf(CSVbuffer, "day, hour, minute, T_o. T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, P, I\n");      
+            fprintf(csvPrinter, "%s", CSVbuffer);   
+        }
+        
+        sprintf(CSVbuffer, "%d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
+                info->tm_mday, info->tm_hour, info->tm_min,
+                elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm,
+                wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco,
+                budynek_zeszle.T_pco, budynek_zeszle.F_zco,
+                regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I);
+        fprintf(csvPrinter, "%s", CSVbuffer); 
         fclose(csvPrinter);
     }
 }
@@ -155,7 +171,7 @@ bool allClientsConnected()
 }
 
 int main(int argc, char* argv[]) 
-{
+{    
     int sockfd, sockfd2;
     socklen_t addrlen;
     struct sockaddr_in svr_name, cli_name;
@@ -201,7 +217,7 @@ int main(int argc, char* argv[])
 
     resetConnectionsTable();
     resetSentDataTable();
-
+    czytaj_nastawy();
     //use the following if you want to start from present time
     //timer = time(NULL); //initial time the same as current system time
     //info = localtime(&timer);
@@ -211,8 +227,8 @@ int main(int argc, char* argv[])
     info = localtime(&timer); 
     
     
-    strftime(buffer, 9, "%d %H:%M", info);
-    printf("Time in buffer: %s\n", buffer);
+    strftime(TimeBuffer, 9, "%d %H:%M", info);
+    //printf("Time in buffer: %s\n", buffer);
 
     while(true) 
     {     
@@ -238,7 +254,7 @@ int main(int argc, char* argv[])
             //exit(1); 
         }
        
-        printf("Received: %s\n", inBuf);
+        printf("%s\n", inBuf);
 
         if(strcmp(inBuf, "engcmd!closeServer") == 0)
         {
@@ -255,8 +271,8 @@ int main(int argc, char* argv[])
             char *command = strtok(NULL, &separator);        
             if(id != NULL && command != NULL)
             {
-                printf("ID: %s ", id);
-                printf("Command: %s\n", command);
+                //printf("ID: %s ", id);
+                //printf("Command: %s\n", command);
             }        
             //useless - every client is seen in the same way
             //printf( "...from [%s:%d]\n",addr_buf, ntohs( cli_name.sin_port ));       
@@ -312,9 +328,9 @@ int main(int argc, char* argv[])
             }
             else if(strcmp(command, "GetTime") == 0)
             {
-                printf("Date set to: %s\n", buffer);
+                printf("Date set to: %s\n", TimeBuffer);
 
-                send(sockfd2, buffer, sizeof("DD HH:MM"), 0);
+                send(sockfd2, TimeBuffer, sizeof("DD HH:MM"), 0);
             }
             else if(strcmp(command, "GetParams") == 0)
             {
@@ -336,8 +352,7 @@ int main(int argc, char* argv[])
                         strcat(strTo, "!");
                         strcat(strTo, elektrocieplownia_zeszle.T_zm);
                         strcat(strTo, "!");
-                        strcat(strTo, regulator_zeszle.F_zm);  
-                        //new 
+                        strcat(strTo, regulator_zeszle.F_zm);
                         strcat(strTo, "!");
                         strcat(strTo, budynek_zeszle.F_zco);
                         send(sockfd2, strTo, dataSize, 0);
@@ -350,17 +365,22 @@ int main(int argc, char* argv[])
                         strcat(strTo, "!");
                         strcat(strTo, elektrocieplownia_zeszle.T_o);
      
-                        send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                        send(sockfd2, strTo, dataSize, 0);
                         break;
                     case 3:
                         //printf("Regulator - Tzco, To\n");
-                        dataSize = 2*MAX_RECORD_SIZE+1;   
+                        czytaj_nastawy();
+                        dataSize = 4*MAX_RECORD_SIZE+3;   
 
                         strcat(strTo, wymiennik_zeszle.T_zco);
                         strcat(strTo, "!");
                         strcat(strTo, elektrocieplownia_zeszle.T_o);
+                        strcat(strTo, "!");
+                        strcat(strTo, regulator_zeszle.P);
+                        strcat(strTo, "!");
+                        strcat(strTo, regulator_zeszle.I);
      
-                        send(sockfd2, strTo, 2*MAX_RECORD_SIZE+1, 0);
+                        send(sockfd2, strTo, dataSize, 0);
                         break;
                     default:
                         printf("Unknown client has sent 'GetParams'\n");
@@ -447,10 +467,10 @@ int main(int argc, char* argv[])
             
             fastForwardTimeInMinutes(10);
             resetSentDataTable();
-            sprintf(logBuffer, "Time in system (day & time): %s\n", buffer);
-            printf("Time in system (day & time): %s\n", buffer);
-            logToFile();
-            printAllData(); 
+            //sprintf(logBuffer, "Time in system (day & time): %s\n", buffer);
+            printf("Time in system (day & time): %s\n", TimeBuffer);
+            //logToFile();
+            //printAllData(); 
             updateDeviceValues();
             printAllData();
         }  
@@ -459,6 +479,24 @@ int main(int argc, char* argv[])
 
     free(info);
     close(sockfd);
-    return SUCCESS;
+    return 0;
 }
+
+
+/*void getPIParamsFromFile()
+{
+    static FILE *fp;
+    fp = fopen("nastawy.pi", "r");
+    if(fp)
+    {
+        size_t paramLength = 0;
+        char *data = 0;
+
+        getdelim(&data, &paramLength, '!' , fp);
+        printf("Read from file: %s\n", data);
+
+        free(data);
+        fclose(fp);
+    }    
+}*/
 

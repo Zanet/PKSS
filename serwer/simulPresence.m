@@ -16,7 +16,7 @@ fwrite(t, 'R!SendData!101.2211');
 fclose(t);
 
 fopen(t);
-fwrite(t, 'B!SendData!257.2333');
+fwrite(t, 'B!SendData!257.2333!-100.0');
 fclose(t);
 
 fopen(t);

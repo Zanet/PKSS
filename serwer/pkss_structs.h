@@ -1,7 +1,18 @@
 #ifndef __PKSS_STRUCTS__
 #define __PKSS_STRUCTS__
 
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <ctime>
+#include <arpa/inet.h>
+#include <cstdio>
 #include <cstring>
+
+
 const int MAX_RECORD_SIZE = 10;
 
 
@@ -22,6 +33,8 @@ typedef struct {
 
 typedef struct {
     char F_zm[MAX_RECORD_SIZE];
+    char P[MAX_RECORD_SIZE];
+    char I[MAX_RECORD_SIZE];
 } Regulator;
 
 #endif
