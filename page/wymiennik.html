@@ -70,7 +70,17 @@
  		// Wyslij nastawy
         $("#send_nastawy").click(function(evt) {
             log("Wysylam nastawy: "+$("#nastawy").val());
-            ws.send("nastawy-wymiennik;"+$("#nastawy_P").val()+","+$("#nastawy_I").val());
+            P = $("#nastawy_P").val();
+            P = parseFloat(P);
+            P = P.toFixed(2);
+            P = pad(P);
+            
+            I = $("#nastawy_I").val();
+            I = parseFloat(I);
+            I = I.toFixed(2);
+            I = pad(I);
+            
+            ws.send("nastawy-wymiennik;"+P+","+I);
         });
  
         // Zapytanie o wykres
@@ -88,6 +98,11 @@
 <body text=white>
 
 <script>
+
+function pad(n) {
+    return (n<10) ? ("0"+n) : n;
+}
+
 function socket() {
     var connection = new WebSocket("ws://localhost:5001");
 
@@ -134,12 +149,12 @@ function socket() {
      <div id="nastawy_P_details">
         </br></br>
         <label for="nastawy">Nastawa P:</label>
-        <input type="number" id="nastawy_P" value="12"/><br />
+        <input type="number" id="nastawy_P" value="8.5" step="0.1" /><br />
     </div>
     
     <div id="nastawy_I_details">
         <label for="nastawy">Nastawa I:</label>
-        <input type="number" id="nastawy_I" value="12"/><br />
+        <input type="number" id="nastawy_I" value="0.0" step="0.1"/><br />
         <input type="submit" id="send_nastawy" value="send_nastawy" />
     </div>
 
