@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Flot Examples: Multiple Axes</title>
+	<link href="../examples.css" rel="stylesheet" type="text/css">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="../../jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="../../jquery.flot.js"></script>
+	<script language="javascript" type="text/javascript" src="../../jquery.flot.time.js"></script>
+	<script type="text/javascript">
+
+	$(function() {
+
+		var oilprices = [[1167692400000,61.05], [1167778800000,58.32], [1167865200000,57.35]];
+
+		var exchangerates = [[1167606000000,0.7580], [1167692400000,0.7580]]; 
+		function euroFormatter(v, axis) {
+			return v.toFixed(axis.tickDecimals) + "€";
+		}
+
+		function doPlot(position) {
+			$.plot("#placeholder", [ getRandomData() ], {
+			series: {
+				shadowSize: 0	// Drawing is faster without shadows
+			},
+			yaxis: {
+				min: 0,
+				max: 100
+			},
+			xaxis: {
+				show: false
+			}
+		});
+		}
+
+		doPlot("right");
+
+		$("button").click(function () {
+			doPlot($(this).text());
+		});
+
+		// Add the Flot version string to the footer
+	});
+
+	</script>
+</head>
+<body>
+
+	<div id="header">
+	</div>
+
+	<div id="content">
+
+		<div class="demo-container">
+			<div id="placeholder" class="demo-placeholder"></div>
+		</div>
+	<button type="button" onclick="getMeasurements()">refresh</button>
+	</div>
+
+</body>
+</html>

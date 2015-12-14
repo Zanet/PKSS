@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Flot Examples: Basic Options</title>
+	<link href="../examples.css" rel="stylesheet" type="text/css">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="../../jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="../../jquery.flot.js"></script>
+	<script type="text/javascript">
+
+
+	function getMeasurements(){
+		var host = "192.168.43.48";
+	var port = "8888";
+	var uri = "/ws";
+	var ws = new WebSocket("ws://192.168.43.48:8888/ws");	
+	ws.onopen = function(){
+		ws.send("wykres-wymiennik");
+	}
+	ws.onmessage = function(evt){
+		var T_zco = [];
+		var T_o = [];
+		var T_pco = [];
+		var T_pm = [];
+		var T_zm = [];
+		var T_bud = [];
+		var T_zco_temp;
+		var message = evt.data;
+		//alert(message);
+		var line_split;
+		var day = document.getElementById("date").value;
+		var hh_mm = [];
+		var message_split = message.split("\n");
+		for (i = 1; i<message_split.length; i++){
+			if(message_split[i].length > 2) {
+				line_split = message_split[i].split(",");
+				if(line_split[0] == day){
+					hh_mm = parseFloat(line_split[1].replace(" ","") +'.' + line_split[2].replace(" ",""));			
+					/*
+					T_zco_temp = line_split[3].replace("+", "");
+					T_zco.push([hh_mm, parseFloat(T_zco_temp)]);
+					T_o.push([hh_mm, parseFloat(line_split[4].replace("+", ""))]);
+					T_pco.push([hh_mm, parseFloat(line_split[5].replace("+", ""))]);
+					*/
+					
+					T_o.push([hh_mm, parseFloat(line_split[3].replace("+", ""))]);
+					T_zco.push([hh_mm, parseFloat(line_split[6].replace("+", ""))]);
+					T_pco.push([hh_mm, parseFloat(line_split[7].replace("+", ""))]);
+					T_zm.push([hh_mm, parseFloat(line_split[4].replace("+", ""))]);
+					T_pm.push([hh_mm, parseFloat(line_split[5].replace("+", ""))]);
+					T_bud.push([hh_mm, parseFloat(line_split[14].replace("+", ""))]);
+				
+				}
+			}
+		}
+		//var budynek = document.getElementById("budynek").value;
+		var budynek = document.getElementById("plotKind").value;
+		if (T_zco.length == 0){
+			alert("Brak pomiarów z wybranego dnia!");
+		}
+		else if (budynek == "T_o" || budynek == "T_zco" || budynek == "T_pco" || budynek == "T_pm" || budynek == "T_zm" || budynek == "T_bud" || budynek == "T_all"){
+			switch(budynek){
+			case "T_zco":
+				$.plot("#placeholder", [T_zco]);
+				break;
+			case "T_o":
+				$.plot("#placeholder", [T_o]);
+				break;
+			case "T_pco":
+				$.plot("#placeholder", [T_pco]);
+				break;
+			
+			case "T_pm":
+				$.plot("#placeholder", [T_pm]);
+				break;
+			case "T_zm":
+				$.plot("#placeholder", [T_zm]);
+				break;
+			case "T_bud":
+				$.plot("#placeholder", [T_bud]);
+				break;
+			case "T_all":
+				$.plot("#placeholder", [{data: T_zco, label: "Temperatura wody wypływającej z wymiennika"}, {data: T_o, label: "Temperatura otoczenia"}, {data: T_pco, label: "Temperatura wypływająca z budynków"}, {data: T_pm, label: "Temperatura powrotna z sieci miejskiej"}, {data: T_zm, label: "Temperatura zasilania miejskiego"}, {data: T_bud, label: "Temperatura budynku"}]);
+				break;
+			
+			}
+		}
+		else{
+			alert("Nie ma takiego budynku!");
+		}
+		}
+	}
+	</script>
+</head>
+<body>
+
+
+	<div id="content">
+
+		<div class="demo-container">
+			<div id="placeholder" class="demo-placeholder"></div>
+		</div>
+	</div>
+	wpisz numer dnia:<input type="text" id="date"></input></br>
+	<select id="plotKind">
+	  <option value="T_o">Temperatura otoczenia</option>
+	  <option value="T_zco">Temperatura wody wypływającej z wymiennika</option>
+	  <option value="T_pco">Temperatura wypływająca z budynków</option>
+	  <option value="T_pm">Temperatura powrotna z sieci miejskiej</option>
+	  <option value="T_zm">Temperatura zasilania miejskiego</option>
+	  <option value="T_bud">Temperatura budynku</option>
+	  <option value="T_all">Wszystkie temperatury</option>
+	</select> </br>
+	<button type="button" onclick="getMeasurements()">Rysuj!</button>
+
+	 
+
+
+</body>
+</html>
