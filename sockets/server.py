@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # python Tornado server for Websockets
 
 import tornado.httpserver
@@ -24,7 +26,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         
         if message == 'wykres-wymiennik': # tutaj chcemy odebrac caly wykres
             #chartFile = open('wykres-wymiennik.txt', 'r')
-            chartFile = open('data.csv', 'r')
+            chartFile = open('../serwer/data.csv', 'r')
             chart = chartFile.read()
             chartFile.close()
             print 'dane do wykresu: %r' % chart
@@ -34,14 +36,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             params = message.split(';')
             
             if params[0] == 'nastawy-budynek':
-                target = open('nastawy_bud.txt', 'w')
+                target = open('../serwer/nastawy_bud.txt', 'w')
                 target.write(str(params[1]));
                 target.close();
                 self.write_message(message)
 
             elif params[0] == 'nastawy-wymiennik':
                 # wyslij dane do serwera c przez plik
-                target = open('nastawy_wym.txt', 'w');
+                target = open('../serwer/nastawy_wym.txt', 'w');
                 target.write(str(params[1]));
                 target.close();
                 self.write_message(message)
