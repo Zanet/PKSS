@@ -11,10 +11,10 @@ legend('T_o','T_{pco}','T_{zco}','T_{bud}','T_{pm}','T_zm')
 set(xl,'FontSize',14);
 set(yl,'FontSize',14);
 set(gca,'Fontsize',16);
-axis([Czas(1) Czas(end)+100 min([T_o; T_zco; T_pco])*1.5 max([T_o; T_zco; T_pco])*1.1 ]);
+axis([Czas(1) Czas(end)+100 min([T_o; T_zco; T_pco])*0.8 max([T_zm; T_zco; T_pco])*1.1 ]);
 subplot(2,1,2);
 f=plot(Czas,F_zm)
-axis([Czas(1) Czas(end)+100 min(F_zm)*1.5 max(F_zm)*1.1 ]);
+axis([Czas(1) Czas(end)+100 min(F_zm)*1-0.001 max(F_zm)*1.1 ]);
 set(f,'LineWidth',2)
 xl=xlabel('Czas [min]');
 yl=ylabel('Temperatura [ ^o C]');
