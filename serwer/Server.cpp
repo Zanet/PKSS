@@ -10,6 +10,7 @@ Wymiennik wymiennik_obecne;
 Budynek budynek_obecne;
 Regulator regulator_obecne;
 
+const int timeToBeAdded = 20; //minutes
 const int BUFFER_SIZE = 4096;
 const int TIME_STR_SIZE = 12;
 const int NUMBER_OF_DEVICES = 4;
@@ -119,16 +120,17 @@ void printAllData()
         char CSVbuffer[150];
         if(iteration == 0)
         {   
-            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, Bud_P, Bud_I, F_zm, Wym_P, Wym_I\n");      
+            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, Bud_P, Bud_I, F_zm, Wym_P, Wym_I, T_bud\n");      
             fprintf(csvPrinter, "%s", CSVbuffer);   
         }
         
-        sprintf(CSVbuffer, "%d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
+        sprintf(CSVbuffer, "%d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
                 info->tm_mday, info->tm_hour, info->tm_min,
                 elektrocieplownia_zeszle.T_o, elektrocieplownia_zeszle.T_zm,
                 wymiennik_zeszle.T_pm, wymiennik_zeszle.T_zco,
                 budynek_zeszle.T_pco, budynek_zeszle.F_zco, budynek_zeszle.P, budynek_zeszle.I,
-                regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I);
+                regulator_zeszle.F_zm, regulator_zeszle.P, regulator_zeszle.I,
+                budynek_zeszle.T_bud);
         fprintf(csvPrinter, "%s", CSVbuffer); 
         fclose(csvPrinter);
     }
@@ -145,6 +147,7 @@ void updateDeviceValues()
 
     strncpy(budynek_zeszle.T_pco, budynek_obecne.T_pco, MAX_RECORD_SIZE);
     strncpy(budynek_zeszle.F_zco, budynek_obecne.F_zco, MAX_RECORD_SIZE);
+    strncpy(budynek_zeszle.T_bud, budynek_obecne.T_bud, MAX_RECORD_SIZE);
 
     strncpy(regulator_zeszle.F_zm, regulator_obecne.F_zm, MAX_RECORD_SIZE);
 }
@@ -422,6 +425,7 @@ int main(int argc, char* argv[])
 
                 char *data1 = NULL;
                 char *data2 = NULL;
+                char *data3 = NULL;
                 //strtok(NULL,...) perform strtok again on inBuf
                 switch(clientNumber) //0 - E, 1 - W, 2 - B, 3 - R, 4 - 
                 {
@@ -450,11 +454,13 @@ int main(int argc, char* argv[])
                         //printf("Received data: %s\n", inBuf);
                         data1 = strtok(NULL, &separator);
                         data2 = strtok(NULL, &separator);
+                        data3 = strtok(NULL, &separator);
                         if(data1)
                         {
                             printf("We got  %s and %s\n", data1, data2);
                             strncpy(budynek_obecne.T_pco, data1, MAX_RECORD_SIZE);
-                            strncpy(budynek_obecne.F_zco, data2, MAX_RECORD_SIZE);              
+                            strncpy(budynek_obecne.F_zco, data2, MAX_RECORD_SIZE);
+                            strncpy(budynek_obecne.T_bud, data3, MAX_RECORD_SIZE);               
                         } 
                         break;
                    case 3:
@@ -489,7 +495,7 @@ int main(int argc, char* argv[])
             } 
   
             
-            fastForwardTimeInMinutes(10);
+            fastForwardTimeInMinutes(timeToBeAdded);
             resetSentDataTable();
             //sprintf(logBuffer, "Time in system (day & time): %s\n", buffer);
             printf("Time in system (day & time): %s\n", TimeBuffer);

@@ -31,6 +31,7 @@ typedef struct {
     char F_zco[MAX_RECORD_SIZE];    
     char P[MAX_RECORD_SIZE];
     char I[MAX_RECORD_SIZE];
+    char T_bud[MAX_RECORD_SIZE];
 } Budynek;
 
 typedef struct {
