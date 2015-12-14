@@ -119,7 +119,7 @@ void printAllData()
         char CSVbuffer[150];
         if(iteration == 0)
         {   
-            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, F_zm, Wym_P, Wym_I, Bud_P, Bud_I\n");      
+            sprintf(CSVbuffer, "day, hour, minute, T_o, T_zm, T_pm, T_zco, T_pco, F_zco, Bud_P, Bud_I, F_zm, Wym_P, Wym_I\n");      
             fprintf(csvPrinter, "%s", CSVbuffer);   
         }
         
@@ -387,6 +387,8 @@ int main(int argc, char* argv[])
                         strcat(strTo, budynek_zeszle.P);
                         strcat(strTo, "!");
                         strcat(strTo, budynek_zeszle.I);
+
+                        printf("Wyslano: %s\n", strTo);
                         send(sockfd2, strTo, dataSize, 0);
                         break;
                     case 3:
