@@ -10,7 +10,6 @@ Wymiennik wymiennik_obecne;
 Budynek budynek_obecne;
 Regulator regulator_obecne;
 
-const int timeToBeAdded = 20; //minutes
 const int BUFFER_SIZE = 4096;
 const int TIME_STR_SIZE = 12;
 const int NUMBER_OF_DEVICES = 4;
@@ -203,10 +202,12 @@ int main(int argc, char* argv[])
         printf("socket() error\n");
         exit(1);
     }
-    if (argc < 4) {
-        printf("Usage: %s port_no day_of_the_month hour_to_start_from\n", argv[0]);
+    if (argc < 5) {
+        printf("Usage: %s port_no day_of_the_month hour_to_start_from mins_to_add\n", argv[0]);
         exit(2);
     }
+    const int minsToBeAdded = atoi(argv[4]);
+    printf("Time will be added: %d\n", minsToBeAdded);
 
 //this snippet is to avoid waiting for timeout after closing socket
     int yes=1;
@@ -495,7 +496,7 @@ int main(int argc, char* argv[])
             } 
   
             
-            fastForwardTimeInMinutes(timeToBeAdded);
+            fastForwardTimeInMinutes(minsToBeAdded);
             resetSentDataTable();
             //sprintf(logBuffer, "Time in system (day & time): %s\n", buffer);
             printf("Time in system (day & time): %s\n", TimeBuffer);
